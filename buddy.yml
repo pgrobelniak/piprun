@@ -1,0 +1,40 @@
+- pipeline: "Build and deploy"
+  events:
+  - type: "PUSH"
+    refs:
+    - "refs/heads/master"
+  fail_on_prepare_env_warning: true
+  actions:
+  - action: "Build"
+    type: "BUILD"
+    docker_image_name: "library/golang"
+    docker_image_tag: "1.19.0"
+    execute_commands:
+    - "rm -rf build"
+    - "mkdir build"
+    - "cp piprun.service build"
+    - "go build -o build/piprun"
+    volume_mappings:
+    - "/:/src/piprun"
+    shell: "BASH"
+  - action: "Transfer"
+    type: "DEPLOY_TO_SANDBOX"
+    input_type: "BUILD_ARTIFACTS"
+    local_path: "/build"
+    remote_path: "/"
+    sandbox_references:
+    - "BY_NAME"
+    referenced_sandbox_name: "piprun"
+  - action: "Start"
+    type: "SANDBOX_EXEC"
+    user: "root"
+    commands:
+    - "mv /piprun.service /lib/systemd/system"
+    - "mv /piprun /usr/local/bin"
+    - "chmod +x /usr/local/bin/piprun"
+    - "systemctl enable piprun"
+    - "systemctl restart piprun"
+    sandbox_references:
+    - "BY_NAME"
+    referenced_sandbox_name: "piprun"
+    shell: "BASH"
