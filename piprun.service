@@ -1,0 +1,10 @@
+[Unit]
+Description=piprun
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+WorkingDirectory=/tmp
+ExecStart=/usr/local/bin/piprun
+[Install]
+WantedBy=multi-user.target
